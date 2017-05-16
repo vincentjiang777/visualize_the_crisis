@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="nv.d3.css" rel="stylesheet" type="text/css">
+<link href="max.nv.d3.css" rel="stylesheet" type="text/css">
+<style>
+    body{overflow-y:hidden;overflow-x:hidden;margin:10px 4px 0px 0px;}
+
+    text{font:9px "Times New Roman";}#chart1,#chart2{position:absolute;}.tick line{opacity:0.1;}
+</style>
+<body>
+<div>
+    <svg id="chart1"></svg>
+</div>
+
+<script src="d3.v3.js"></script>
+<script src="nv.d3.js"></script>
+<script>
+
+
+    var chartdata = [  {
+        key    : "Western Europe",
+        values : []
+    },  {
+        key    : "Western Offshoots",
+        values : []
+    },  {
+        key    : "East Europe",
+        values : []
+    },  {
+        key    : "Former USSR",
+        values : []
+    },  {
+        key    : "Latin America",
+        values : []
+    },  {
+        key    : "Asia",
+        values : []
+    },  {
+        key    : "Africa",
+        values : []
+    }
+    ];
+
+
+    d3.csv("GDPlevelsSince1_maddison.csv", function (error, csv) {
+        if (error) return console.log("there was an error loading the csv: " + error);
+        console.log("there are " + csv.length + " elements in my csv set");
+
+        var datacolumns = ["Western Europe","Western Offshoots","East Europe","Former USSR","Latin America","Asia","Africa"];
+
+        for (var i = 0; i < datacolumns.length; i++) {
+            chartdata[i].values = csv.map(function(d) { return [ (+d["year"]-1969.5)*31556900000  , +d[datacolumns[i]] ]; });
+        };
+
+
+        //var colors = d3.scale.ordinal()
+                //.range(["grey", "#104E8B","#3B6AA0","orange", "green"])
+              //.domain(d3.range(0,5));
+        var colors = d3.scale.category20();
+
+        keyColor = function(d, i) {return colors(d.key)};
+
+
+        nv.addGraph(function() {
+            var chart = nv.models.stackedAreaChart()
+                    .interpolate("basis") //smooth out the lines for more options (http://www.d3noob.org/2013/01/smoothing-out-lines-in-d3js.html)
+                    .x(function(d) { return d[0]})
+                    .y(function(d) { return d[1] })
+                    .useInteractiveGuideline(true)
+                    .clipEdge(true)
+                    .margin({top: 30, right: 30, bottom: 80, left: 65})
+                    .color(keyColor);
+
+            chart.xAxis
+                    .tickFormat(function(d) { return d3.time.format('%Y')(new Date(d)) });
+
+            chart.yAxis.tickFormat(d3.format(',f'));
+
+            d3.select('#chart1')
+                    .datum(chartdata)
+                    .transition().call(chart);
+
+
+            function update_cust() {
+
+
+                d3.selectAll("g.nv-series")
+                        .filter(function() {
+                            return d3.select(this).select("text").text() == "Stream";
+                        }).remove();
+
+                chart.update;
+
+            };
+            nv.utils.windowResize(update_cust());
+
+            return chart;
+        });
+
+// end read csv
+    });
+
+
+    var logoCanvas = d3.select("#chart1")
+
+    logoCanvas.append("svg:image")
+            .attr('x',2)
+            .attr('y',0)
+            .attr('width', 51)
+            .attr('height', 25)
+
+
+</script>
