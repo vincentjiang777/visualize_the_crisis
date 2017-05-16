@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link href="max.nv.d3.css" rel="stylesheet" type="text/css">
+<style>
+
+#TitleContainer {
+    position: absolute;
+    width: 100%;
+    height: 30px;
+    top: 52px;
+    left: 300px;
+    background-color: #ffffff;
+}
+.Button_explanation {
+    font-size: 18px;
+    font-family: "Times New Roman";
+}
+.mainTitleText {
+    font-size: 18px;
+    font-family: "Times New Roman";
+}
+
+.hoverinfo {
+    text-align: center;
+}
+#map {
+    position: absolute;
+    margin-top: 55px;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background-color: #ffffff;
+}
+</style>
+
+
+<body>
+<script src="d3.v3.min.js"></script>
+<script src="topojson.v1.min.js"></script>
+
+<script src="datamaps.world.min.js"></script>
+<script src="colorbrewer.js"></script>
+
+<span class="Button_explanation">AD </span>
+<button id="button_1">1</button>
+<button id="button_1000">1000</button>
+<button id="button_1500">1500</button>
+<button id="button_1700">1700</button>
+<button id="button_1820">1820</button>
+<button id="button_1870">1870</button>
+<button id="button_1913">1913</button>
+<button id="button_1950">1950</button>
+<button id="button_1960">1960</button>
+<button id="button_1970">1970</button>
+<button id="button_1980">1980</button>
+<button id="button_1990">1990</button>
+<button id="button_2000">2000</button>
+<button id="button_2008">2008</button>
+<div id="map"> </div>
+<div> <svg id="CreditsContainer"></svg> </div>
+<div> <svg id="TitleContainer"></svg> </div>
+<script>
+
+    //var b1 = document.getElementById('b1'), b2 = document.getElementById('b2');
+
+
+    // XXX Vars to adjust for every particular graph
+    var colorschemeOfThisMap = colorbrewer.Blues[9];
+    // XXX If Coloring order is running in wrong direction uncomment the following
+    //	colorschemeOfThisMap.reverse();
+
+
+    var bucketLimits = [1000,2000,4000,6000,10000,15000, 20000, 25000]; // XXX Bucket Limits to adjust
+
+    var upperBoundBucketLimits = {};
+    for (var i=0;i<bucketLimits.length;i++)
+    {
+        upperBoundBucketLimits[i] = bucketLimits[i]-1;  //XXX adjust the substracted value
+    }
+
+
+
+    MapTitleText = 'GDP per Capita in the year ';
+
+    dataSourcetext="Data source: Angus Maddison Historical Statistics";  // XXX Text to be shown as data Source text
+
+    ExplainingProgressLink_href = "http://www.ourworldindata.org/data/growth-and-distribution-of-prosperity/gdp-growth-over-the-last-2000-years";   /// XXX The true link (the visually shown link without http:// is created automatically)
+
+    //
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––––
+    // Create the Bucket Names
+    var bucketLimitsInStrings = {};
+    var upperBoundBucketLimitsInStrings = {};
+
+    for (var i=0;i<bucketLimits.length;i++)
+    {
+        bucketLimitsInStrings[i]=bucketLimits[i].toString();
+        upperBoundBucketLimitsInStrings[i]=upperBoundBucketLimits[i].toString();
+    };
+
+    var bucketnames = {};
+    bucketnames[0] = 'below ' + bucketLimitsInStrings[0];  // lowest category
+    var lastbucket =  bucketLimits.length;
+    bucketnames[lastbucket] = 'above ' + bucketLimitsInStrings[(lastbucket-1)];  // highest category
+
+    for (var i=1;i<lastbucket;i++)
+    {
+        bucketnames[i] = bucketLimitsInStrings[(i-1)] + ' - ' + upperBoundBucketLimits[(i)];
+    };
+    var bucketnamesarray = [];
+
+    for (var key in bucketnames) {
+        if (bucketnames.hasOwnProperty(key)) {
+            bucketnamesarray.push(bucketnames[key]);
+        }
+    }
+
+    // bucketnamesarray.reverse();
+    console.info(bucketnamesarray);
+    // console.log(bucketLimits[(lastbucket-1)]);
+    // Done creating the Bucket Names
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+
+
+    window.onload = function(){
+        visualisedYear = "1960"; // The year shown on page load
+        console.log("window.onload");
+        console.log(visualisedYear);
+        map();
+    }
+
+    // On Click of Button –> Change value of variable visualisedYear and call map
+    button_1.onclick = function(){ visualisedYear = 1; 			map();  }
+    button_1000.onclick = function(){ visualisedYear = 1000; 			map();  }
+    button_1500.onclick = function(){ visualisedYear = 1500; 			map();  }
+    button_1700.onclick = function(){ visualisedYear = 1700; 			map();  }
+    button_1820.onclick = function(){ visualisedYear = 1820; 			map();  }
+    button_1870.onclick = function(){ visualisedYear = 1870; 			map();  }
+    button_1913.onclick = function(){ visualisedYear = 1913; 			map();  }
+
+    button_1950.onclick = function(){ visualisedYear = 1950;		    map();  }
+
+    button_1960.onclick = function(){ visualisedYear = 1960;		    map();  }
+
+    button_1970.onclick = function(){ visualisedYear = 1970;		    map();  }
+
+    button_1980.onclick = function(){ visualisedYear = 1980;		    map();  }
+
+    button_1990.onclick = function(){ visualisedYear = 1990;		    map();  }
+
+    button_2000.onclick = function(){ visualisedYear = 2000;  		    map();  }
+
+    button_2008.onclick = function(){ visualisedYear = 2008;			map();  }
+
+
+
+    function map(){
+
+        d3.csv("gdpPerCapitaSince1_maddison.csv", function(error, csvdata1) {  // XXX .csv file to read from  (measures have to be named identical + suffix of year)
+
+
+                    if (visualisedYear == 1) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1;   }
+                    }
+                    if (visualisedYear == 1000) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1000;   }
+                    }
+                    if (visualisedYear == 1500) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1500;   }
+                    }
+                    if (visualisedYear == 1700) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1700;   }
+                    }
+                    if (visualisedYear == 1820) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1820;   }
+                    }
+                    if (visualisedYear == 1870) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1870;   }
+                    }
+                    if (visualisedYear == 1913) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1913;   }
+                    }
+
+                    if (visualisedYear == 1950) { for (i=0;i<csvdata1.length;i++)
+                    {
+                        csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1950;
+                        console.log("1950");
+                    }
+                    }
+
+                    if (visualisedYear == 1960) { for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1960;   }
+                    }
+
+                    if (visualisedYear == 1970) {for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1970;	}
+                    }
+
+                    if (visualisedYear == 1980) {for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1980; 	}
+                    }
+
+                    if (visualisedYear == 1990) {for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita1990; 	}
+                    }
+
+                    if (visualisedYear == 2000) {for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita2000; 	}
+                    }
+
+                    if (visualisedYear == 2008) {for (i=0;i<csvdata1.length;i++)
+                    { csvdata1[i].visualisedmeasure=csvdata1[i].gdppercapita2008; 	}
+                    }
+
+
+                    for (var i=0;i<csvdata1.length;i++)
+                    {
+
+                        //Sort Data in Buckets and create fillKey
+                        csvdata1[i].fillKey = {};
+
+                        if (csvdata1[i].visualisedmeasure < bucketLimits[0]) {  csvdata1[i].fillKey = bucketnamesarray[0]; }
+
+                        for (var h=0;h<lastbucket;h++)
+                        {  if (csvdata1[i].visualisedmeasure >= bucketLimits[h] && csvdata1[i].visualisedmeasure < bucketLimits[(h+1)]) {  csvdata1[i].fillKey = bucketnamesarray[(h+1)]; }  };
+
+                        if (csvdata1[i].visualisedmeasure >= bucketLimits[(lastbucket-1)] ) {  csvdata1[i].fillKey = bucketnamesarray[lastbucket]; }
+
+                        if (csvdata1[i].visualisedmeasure == 0) {  csvdata1[i].fillKey = 'no data'; }
+
+                        csvdata1[ csvdata1[i].ISO] = csvdata1[i] ;
+                        delete  csvdata1[i].ISO;
+                        delete  csvdata1[i] ;
+                    }
+                    console.log('Now about to update the map with year ' + visualisedYear );
+
+                    myMap1.updateChoropleth(csvdata1);  // Call the Map
+
+                }
+        );
+
+        TitleCanvas // Deletes the previous headline by painting white rectangle over it
+                .append("rect")
+                .attr("x",75)
+                .attr("y",0)
+                .attr("width","100%")
+                .attr("height","100%")
+                .attr("fill",'white');
+
+
+        TitleCanvas
+                .append("text")
+                .text(MapTitleText + visualisedYear)  // XXX Change the title here
+                .attr("x",75)
+                .attr("y",18)
+                .attr('class','mainTitleText');
+    }
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––
+
+
+
+
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––
+    // Map Styling
+    var myMap1 = new Datamap(
+
+            {
+                scope: 'world',
+                projection: 'equirectangular',
+                element: document.getElementById('map'),
+                // projection: 'mercator',
+
+                geographyConfig: {
+                    borderWidth: 0.5,
+                    borderColor: '#ffffff',
+                    highlightBorderColor: 'black',
+                    highlightBorderWidth: 0.5,
+
+                    popupTemplate: function(geography, csvdata1) {
+                        if ( !csvdata1 ) return;  // makes sure that the tooltip is shown only if there is data
+                        return '<div class="hoverinfo"> ' + geography.properties.name + '<br> GDP per capita ' + visualisedYear +': ' +  csvdata1.visualisedmeasure + ' (1990 International Geary-Khamis dollars)';},  // XXX Change Tooltip text
+                },
+                fills: {
+
+
+
+//"below 1000", "1000 - 1999", "2000 - 3999", "4000 - 5999", "6000 - 9999", "10000 - 14999", "15000 - 19999", "20000 - 29999", "above 30000"
+                    "above 25000": colorschemeOfThisMap[8],
+                    "20000 - 24999": colorschemeOfThisMap[7],
+                    "15000 - 19999": colorschemeOfThisMap[6],
+                    "10000 - 14999"	: colorschemeOfThisMap[5],
+                    "6000 - 9999": colorschemeOfThisMap[4],
+                    "4000 - 5999": colorschemeOfThisMap[3],
+                    "2000 - 3999": colorschemeOfThisMap[2],
+                    "1000 - 1999": colorschemeOfThisMap[1],
+                    'below 1000': colorschemeOfThisMap[0],
+                    'no data' : '#BEBEBE',
+                    defaultFill: '#BEBEBE'
+                },
+                data: {}  //empty data has to be included here cause of some issue MarkDiMarkoh  mentioned in our GitHub conversation
+            }
+
+    );
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––
+
+
+    //Legende anzeigen
+    myMap1.addPlugin("mylegend", addLegendmaxstyle);
+    myMap1.mylegend({legendTitle:"GDP per capita (1990 International Geary-Khamis dollars)"})
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––
+
+
+
+    //  –––––––––––––––––––––––––––––––––––––––––––––––––––
+    //  Max – Plugin added by me to have the legend vertically
+    function addLegendmaxstyle(layer, data, options) {
+        data = data || {};
+        if ( !this.options.fills ) { return; }
+
+
+        var html = '<dl>';
+        var label = '';
+
+        if ( data.legendTitle ) {  html = '<h4>' + data.legendTitle + '</h4>' + html;  }
+
+        for ( var fillKey in this.options.fills ) {
+
+            if ( fillKey === 'defaultFill') {
+                if (! data.defaultFillName ) {
+                    continue;
+                }
+
+                label = data.defaultFillName;
+            } else {
+                if (data.labels && data.labels[fillKey]) {
+                    label = data.labels[fillKey];
+                } else {
+
+// Changed by Max //
+                    label= '' + fillKey;
+                    html += '<dd style="background-color:' +  this.options.fills[fillKey] + '">&nbsp;</dd>';
+                    html += '<dt>' + label + '</dt>'+ '<br>';
+
+                }
+            }
+        }
+        html += '</dl>';
+
+        var hoverover = d3.select( this.options.element ).append('div')
+                .attr('class', 'datamaps-legend')
+                .html(html);
+    }
+    //  –––––––––––––––––––––––––––––––––––––––––––––––––––
+
+
+
+
+    // –––––––––––––––––––––––––––––––––––––––––––––––––––
+    {
+
+        var TitleCanvas = d3.select("#TitleContainer")
+
+
+    }
+
+</script>
+
+</body>
