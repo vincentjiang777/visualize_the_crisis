@@ -1,0 +1,151 @@
+.background {
+    fill: #ffffff;
+    /* fill: white; */
+    pointer-events: all;
+}
+
+
+.titlebar {
+    fill: transparent
+}
+
+#mapTitle {
+    font-size: 15px;
+    text-anchor: middle;
+    font-size: larger;
+    font-weight: 800;
+    font-size: larger;
+}
+
+.sidebar {
+    fill: #ffffff;
+    /* fill: white; */
+    stroke: grey;
+    pointer-events: all;
+}
+
+.sidebarTitle {
+    /* background: black; */
+    font-size: 12px;
+    font-family: monospace;
+    text-align: center;
+
+}
+
+.feature {
+    fill: #333333;
+    stroke: #404040;
+    stroke-width: 0.1px;
+    cursor: pointer;
+}
+
+
+.legend {
+    stroke: white;
+    stroke-width: 0.1px;
+
+}
+
+.label {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bolder;
+}
+
+.legendTitle{
+    text-align: center;
+    font-size: 14px;
+    font-family: monospace;
+    font-weight: bolder;
+
+}
+
+.feature.active {
+    stroke: orange;
+}
+
+.state {
+    fill: none;
+    stroke: #c7c7c7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+.mesh {
+    fill: none;
+    opacity: 0;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+div.tooltip {
+    position: relative;
+    text-align: center;
+    color: black;
+    width: 100px;
+    font-size: 8px;
+    background: #ffffff;
+    border: 1px;
+    border-radius: 8px;
+    pointer-events: none;
+    left: 835px;
+    top: -490px;
+
+}
+
+th, td {
+    text-align: center;
+}
+
+
+.foreignObject{
+    /* background: black; */
+
+}
+
+input[type=range]
+{
+    /* width: 150px; */
+    /* height: 2px; */
+}
+
+.axis {
+    font: 10px sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+.axis .domain {
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .3;
+    stroke-width: 10px;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.axis .halo {
+    fill: none;
+    stroke: #ddd;
+    stroke-width: 8px;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.slider .handle {
+    fill: #fff;
+    stroke: #000;
+    stroke-opacity: .5;
+    stroke-width: 1.25px;
+    cursor: crosshair;
+    pointer-events: all;
+}
+
+.slider .handle text {
+    fill: black;
+    text-align: center;
+    font-size: 10px;
+}
